@@ -10,13 +10,13 @@ internal class Day_01KtTest {
     fun partOne() {
         val answer = partOne(input_01.split("\n").map { it.toInt() })
         println(answer)
-        //assert(answer == 442)
+        assert(answer == 442)
     }
 
     @Test
     fun partTwo() {
         val answer = partTwo(input_01.split("\n").map { it.toInt() }.circular())
         println(answer)
-//        assert(answer== 59908)
+        assert(answer== 59908)
     }
 }
