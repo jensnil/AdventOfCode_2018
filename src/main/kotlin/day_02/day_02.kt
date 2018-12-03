@@ -12,10 +12,11 @@ fun partTwo(input : List<String>) : String? {
         for (j in i+1 until input.size) {
             val first = input[i]
             val second = input[j]
-            val temp = first.foldIndexed("") {index , acc, value ->
-                if (value == second[index]) acc + value else acc}
-            if (temp.length == first.length - 1) {
-                return temp
+            val theCommonLetters = first.foldIndexed("") { index, acc, value ->
+                if (value == second[index]) acc + value else acc
+            }
+            if (theCommonLetters.length == first.length - 1) {
+                return theCommonLetters
             }
         }
     }
