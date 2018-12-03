@@ -18,7 +18,7 @@ internal class Day_03KtTest {
         println(answer)
     }
 
-    internal fun parse(input : String) : List<Claim>? {
+    private fun parse(input : String) : List<Claim>? {
         // #1 @ 1,3: 4x4
         val regex = """^#(\d+) @ (\d+),(\d+): (\d+)x(\d+)$""".toRegex()
         val lines = input.split("\n")

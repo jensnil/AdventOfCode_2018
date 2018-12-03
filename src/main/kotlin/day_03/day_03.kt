@@ -12,14 +12,10 @@ data class Claim (
 fun partOne(input : List<Claim>) : Int {
     val squares = mutableMapOf<Pair<Int,Int>, Int>()
     input.forEach {
-        for (i in it.left until it.left + it.width) {
-            for (j in it.top until it.top + it.height) {
-                var position = Pair(i, j)
-                if (squares.containsKey(position)) {
-                  squares.put(position, squares[position]!! + 1)
-                } else {
-                    squares.put(position, 1)
-                }
+        (it.left until it.left + it.width).forEach {row ->
+            (it.top until it.top + it.height).forEach { col ->
+                val position = Pair(row, col)
+                squares[position] = (squares[position]?:0) + 1
             }
         }
     }
@@ -29,23 +25,18 @@ fun partOne(input : List<Claim>) : Int {
 fun partTwo(input : List<Claim>) : Int {
     val squares = mutableMapOf<Pair<Int,Int>, MutableList<Int>>()
     input.forEach {
-        for (i in it.left until it.left + it.width) {
-            for (j in it.top until it.top + it.height) {
-                var position = Pair(i, j)
-                if (squares.containsKey(position)) {
-                    squares[position]!!.add(it.id)
-                } else {
-                    squares.put(position, mutableListOf(it.id))
-                }
+        (it.left until it.left + it.width).forEach {row ->
+            (it.top until it.top + it.height).forEach { col ->
+                val position = Pair(row, col)
+                squares[position] = squares[position]?.apply { add(it.id) }
+                        ?: mutableListOf(it.id)
             }
         }
     }
     val stillNotOverlapping = input.map { it.id }.toMutableSet()
-    squares.forEach {
-        if (it.value.size > 1) {
-            it.value.forEach {
-                stillNotOverlapping.remove(it)
-            }
+    squares.filter { it.value.size > 1 }.forEach {
+        it.value.forEach {id ->
+            stillNotOverlapping.remove(id)
         }
     }
     return stillNotOverlapping.first()
