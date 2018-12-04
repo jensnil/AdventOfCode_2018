@@ -1,4 +1,4 @@
-package day_03
+package day03
 
 data class Claim (
         val id : Int,

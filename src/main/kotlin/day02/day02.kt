@@ -1,4 +1,4 @@
-package day_02
+package day02
 
 fun partOne(input : List<String>) : Int {
     val grouped = input.map { it.toCharArray().groupBy { it }}

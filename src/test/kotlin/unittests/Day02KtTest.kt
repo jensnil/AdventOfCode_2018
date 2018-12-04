@@ -7,14 +7,14 @@ internal class Day02KtTest {
 
     @Test
     fun partOne() {
-        val answer = day_02.partOne(parse(getInput("day02.txt")))
+        val answer = day02.partOne(parse(getInput("day02.txt")))
         println(answer)
         assert(answer == 7776)
     }
 
     @Test
     fun partTwo() {
-        val answer = day_02.partTwo(parse(getInput("day02.txt")))
+        val answer = day02.partTwo(parse(getInput("day02.txt")))
         println(answer)
         assert(answer== "wlkigsqyfecjqqmnxaktdrhbz")
     }

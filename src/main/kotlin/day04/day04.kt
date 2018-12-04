@@ -1,4 +1,4 @@
-package day_04
+package day04
 
 import lib.maxIndex
 

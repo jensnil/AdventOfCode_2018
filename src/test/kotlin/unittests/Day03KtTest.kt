@@ -1,6 +1,6 @@
 package unittests
 
-import day_03.Claim
+import day03.Claim
 import lib.getInput
 import org.junit.jupiter.api.Test
 
@@ -8,14 +8,14 @@ internal class Day03KtTest {
 
     @Test
     fun partOne() {
-        val answer = day_03.partOne(parse(getInput("day03.txt")))
+        val answer = day03.partOne(parse(getInput("day03.txt")))
         println(answer)
         assert(answer == 97218)
     }
 
     @Test
     fun partTwo() {
-        val answer = day_03.partTwo(parse(getInput("day03.txt")))
+        val answer = day03.partTwo(parse(getInput("day03.txt")))
         println(answer)
         assert(answer == 717)
     }
