@@ -1,6 +1,5 @@
 package unittests
 
-import day04.Event
 import lib.getInput
 import org.junit.jupiter.api.Test
 

@@ -3,7 +3,6 @@ package day06
 fun partOne(input: List<Pair<Int,Int>>) : Int {
     val width = input.map { it.first }.max()!!
     val height = input.map { it.second}.max()!!
-    //val array = Array(width+1, {IntArray(height+1) {-1} })
     var array = mutableMapOf<Pair<Int,Int>, Int>()
     var bordering = mutableSetOf<Int>()
 
