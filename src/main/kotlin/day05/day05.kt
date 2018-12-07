@@ -11,7 +11,7 @@ fun reduce(input : String) : String {
         }
         i++
     }
-    println(toReturn)
+    //println(toReturn)
     return toReturn
 }
 
