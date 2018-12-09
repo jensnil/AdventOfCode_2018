@@ -1,6 +1,6 @@
 package day09
 
-internal class Node(val value : Int, var prev : Node?, var next : Node?) {
+class Node(val value : Int, var prev : Node?, var next : Node?) {
     fun insert(v : Int) : Node {
         val toInsert = Node(v, prev, this)
         prev!!.next = toInsert
@@ -13,14 +13,21 @@ internal class Node(val value : Int, var prev : Node?, var next : Node?) {
         next!!.prev = prev
         return next!!
     }
+
+    companion object {
+        fun createCircle() : Node {
+            var circle = Node(0,null,null)
+            circle.next = circle
+            circle.prev = circle
+            return circle
+        }
+    }
 }
 
 fun bestScore(input: Pair<Int,Int>) : Long {
     var players = MutableList(input.first) {0L}
     var round = 1
-    var circle = Node(0,null,null)
-    circle.next = circle
-    circle.prev = circle
+    var circle = Node.createCircle()
 
     while (round <= input.second) {
         if (round % 23 == 0) {
