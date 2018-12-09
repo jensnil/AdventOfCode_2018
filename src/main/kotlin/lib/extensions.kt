@@ -29,6 +29,10 @@ class MutableCircularList<T>(private val list: MutableList<T>) : MutableList<T> 
         list.add(index.safely(), element)
     }
 
+    override fun removeAt(index: Int): T {
+        return list.removeAt(index.safely())
+    }
+
     private fun Int.safely(): Int =
             if (this < 0) (this % size + size) % size
             else this % size
