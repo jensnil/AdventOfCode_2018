@@ -2,7 +2,6 @@ package unittests
 
 import lib.getInput
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 
 internal class Day10KtTest {
 
