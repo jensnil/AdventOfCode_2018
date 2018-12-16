@@ -4,12 +4,15 @@ class Player(val isElf : Boolean) {
     var hitPoints = 200
 }
 
+var attackPoints = 3
+var rounds = 0
 var board = mutableListOf(mutableListOf<Char>())
-var elves = mutableMapOf<Pair<Int,Int>, Player>()
-var goblins = mutableMapOf<Pair<Int,Int>, Player>()
 var all = mutableMapOf<Pair<Int,Int>, Player>()
 
 fun populate(input : List<String>) {
+    var elves = mutableMapOf<Pair<Int,Int>, Player>()
+    var goblins = mutableMapOf<Pair<Int,Int>, Player>()
+    rounds = 0
     board = MutableList(input.size) { MutableList(input[0].length) {' '}}
     input.forEachIndexed { y, line ->
         for (x in line.indices) {
@@ -18,23 +21,32 @@ fun populate(input : List<String>) {
                 board[y][x] = '.'
             } else if (line[x] == 'G') {
                 goblins[Pair(x, y)] =  Player(false)
+                board[y][x] = '.'
             } else {
                 board[y][x] = line[x]
             }
         }
     }
+    all = mutableMapOf<Pair<Int,Int>, Player>()
     all.putAll(elves)
     all.putAll(goblins)
 }
 
 fun printGame() {
+    println("After round ${rounds}")
     board.forEachIndexed { y, line ->
         line.forEachIndexed { x, cell ->
-            elves.filter { it.key.first == x && it.key.second == y}.values.firstOrNull()?.let {
-                print("E")
-            } ?: goblins.filter { it.key.first == x && it.key.second == y}.values.firstOrNull()?.let {
-                print("G")
+            all.filter { it.key.first == x && it.key.second == y }.values.firstOrNull()?.let {
+                if (it.isElf) {
+                    print("E")
+                } else {
+                    print("G")
+                }
             } ?: print(cell)
+        }
+        print("   ")
+        all.filter { it.key.second == y }.forEach {
+            print(" ${if (it.value.isElf) "E" else "G"}(${it.value.hitPoints}), ")
         }
         println()
     }
@@ -98,69 +110,139 @@ fun getShortestPath(player : Pair<Int,Int>, inRangeOfEnemies : List<Pair<Int,Int
     return paths.filter { inRangeOfEnemies.contains(it.key) }.values.minBy { it.size }
 }
 
-fun hit(cell : Pair<Int,Int>, player : Player) {
+fun canHit(cell : Pair<Int,Int>, player : Player) : Boolean {
     var newCell = Pair(cell.first, cell.second - 1)
     if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
-        all[newCell]!!.hitPoints -=  3
+        return true
     }
     newCell = Pair(cell.first - 1, cell.second)
     if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
-        all[newCell]!!.hitPoints -=  3
+        return true
     }
     newCell = Pair(cell.first + 1, cell.second)
     if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
-        all[newCell]!!.hitPoints -=  3
+        return true
     }
     newCell = Pair(cell.first, cell.second + 1)
     if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
-        all[newCell]!!.hitPoints -=  3
+        return true
     }
+    return false
+}
+
+fun hit(cell : Pair<Int,Int>, player : Player) {
+    val inRange = mutableListOf<Pair<Int,Int>>()
+    var newCell = Pair(cell.first, cell.second - 1)
+    if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
+        inRange.add(newCell)
+    }
+    newCell = Pair(cell.first - 1, cell.second)
+    if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
+        inRange.add(newCell)
+    }
+    newCell = Pair(cell.first + 1, cell.second)
+    if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
+        inRange.add(newCell)
+    }
+    newCell = Pair(cell.first, cell.second + 1)
+    if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
+        inRange.add(newCell)
+    }
+//    if (inRange.groupBy { all[it]!!.hitPoints }.minBy { it.key }?.value?.size ?: 0 > 1) {
+//        println("HEJ")
+//    }
+
+    inRange.minBy { all[it]!!.hitPoints }?.let {
+        all[it]!!.hitPoints -= if (player.isElf) attackPoints else 3
+    }
+}
+
+fun removeCorpses() : Boolean {
+//    if (all.any { it.value.hitPoints <= 0 && it.value.isElf }) {
+//        return false
+//    }
+    all = all.filter { it.value.hitPoints > 0 }.toMutableMap()
+    return true
 }
 
 fun partOne(input: List<String>) : Int {
     populate(input)
-    printGame()
     while (true) {
         all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
+        printGame()
         all.toMap().forEach {
-            val reachableEnemies = inRange(!it.value.isElf)
-            val shortestPath = getShortestPath(it.key, reachableEnemies)
+            if (it.value.hitPoints > 0) {
+                if (all.filter { it.value.isElf }.isEmpty() || all.filter { !it.value.isElf }.isEmpty()) {
+                    printGame()
+                    println("$rounds * ${all.map { it.value.hitPoints }.sum()}")
+                    return rounds * all.map { it.value.hitPoints }.sum()
+                }
+                if (!canHit(it.key, it.value)) {
+                    val reachableEnemies = inRange(!it.value.isElf)
 
-            val nextPosition = shortestPath?.first()
+                    val shortestPath = getShortestPath(it.key, reachableEnemies)
 
-            nextPosition?.let {next ->
-                all.remove(it.key)
-                all[next] = it.value
-                hit(next, it.value)
+                    val nextPosition = shortestPath?.first()
+
+                    nextPosition?.let {next ->
+                        all.remove(it.key)
+                        all[next] = it.value
+
+                        hit(next, it.value)
+                    }
+                } else {
+                    hit(it.key, it.value)
+                }
+                removeCorpses()
+            } else {
+                println()
             }
         }
+        rounds++
+
     }
 
     return 0
 }
 
 
-//fun partTwo(input: String) : Int {
-//}
+fun partTwo(input: List<String>) : Int {
+    attackPoints = 34
+    populate(input)
+    while (true) {
+        all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
+        printGame()
+        all.toMap().forEach {
+            if (it.value.hitPoints > 0) {
+                if (all.filter { it.value.isElf }.isEmpty() || all.filter { !it.value.isElf }.isEmpty()) {
+                    printGame()
+                    println("$rounds * ${all.map { it.value.hitPoints }.sum()}")
+                    return rounds * all.map { it.value.hitPoints }.sum()
+                }
+                if (!canHit(it.key, it.value)) {
+                    val reachableEnemies = inRange(!it.value.isElf)
 
-//
-//fun getSurroundingEnemies(cell : Pair<Int,Int>, isEnemyElf: Boolean) : Set<Pair<Int,Int>> {
-//    var toReturn = mutableSetOf<Pair<Int,Int>>()
-//    var newCell = Pair(cell.first, cell.second - 1)
-//    if ((elves.contains(newCell) && isEnemyElf) || (goblins.contains(newCell) && !isEnemyElf)) {
-//        toReturn.add(newCell)
-//    }
-//    newCell = Pair(cell.first - 1, cell.second)
-//    if ((elves.contains(newCell) && isEnemyElf) || (goblins.contains(newCell) && !isEnemyElf)) {
-//        toReturn.add(newCell)
-//    }
-//    newCell = Pair(cell.first + 1, cell.second)
-//    if ((elves.contains(newCell) && isEnemyElf) || (goblins.contains(newCell) && !isEnemyElf)) {
-//        toReturn.add(newCell)
-//    }
-//    newCell = Pair(cell.first, cell.second + 1)
-//    if ((elves.contains(newCell) && isEnemyElf) || (goblins.contains(newCell) && !isEnemyElf)) {
-//        toReturn.add(newCell)
-//    }
-//    return toReturn
-//}
+                    val shortestPath = getShortestPath(it.key, reachableEnemies)
+
+                    val nextPosition = shortestPath?.first()
+
+                    nextPosition?.let {next ->
+                        all.remove(it.key)
+                        all[next] = it.value
+
+                        hit(next, it.value)
+                    }
+                } else {
+                    hit(it.key, it.value)
+                }
+                removeCorpses()
+            } else {
+                println()
+            }
+        }
+        rounds++
+
+    }
+
+    return 0
+}
