@@ -20,11 +20,8 @@ internal class Day16KtTest {
         assert(answer == 496)
     }
 
-
     private fun parse(input : List<String>) : List<Triple<List<Int>,List<Int>,List<Int>>> {
         val regex = listOf("""^Before: \[(\d+), (\d+), (\d+), (\d+)\]$""".toRegex(), """^(\d+) (\d+) (\d+) (\d+)$""".toRegex(), """^After:  \[(\d+), (\d+), (\d+), (\d+)\]$""".toRegex())
-        var regexIndex = 0
-
         return (0..(input.size-1)/4).map {
             val match0 = regex[0].find(input[4 * it])
             val match1 = regex[1].find(input[4 * it + 1])
