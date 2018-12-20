@@ -208,7 +208,18 @@ fun partOne(input: List<String>) : Int {
 
 fun partTwo(input: List<String>) : Int {
     attackPoints = 34
-    populate(input)
+    while (true) {
+        populate(input)
+        var elfCount = all.count { it.value.isElf }
+        val result = runGame()
+        if (elfCount == all.count { it.value.isElf }) {
+            return result
+        }
+        attackPoints++
+    }
+}
+
+fun runGame() : Int {
     while (true) {
         all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
         printGame()
@@ -241,8 +252,6 @@ fun partTwo(input: List<String>) : Int {
             }
         }
         rounds++
-
     }
-
     return 0
 }
