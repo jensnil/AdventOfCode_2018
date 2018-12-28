@@ -11,7 +11,7 @@ internal class Day23KtTest {
     fun partOne() {
         val answer = day23.partOne(parse(getInput("day23.txt")))
         println(answer)
-        //assert(answer == 7299)
+        assert(answer == 430)
     }
 
     @Test

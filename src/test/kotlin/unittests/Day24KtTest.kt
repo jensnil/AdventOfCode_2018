@@ -11,14 +11,14 @@ internal class Day24KtTest {
     fun partOne() {
         val answer = day24.partOne(parse(getInput("day24.txt")))
         println(answer)
-        //assert(answer == 7299)
+        assert(answer == 25088)
     }
 
     @Test
     fun partTwo() {
         val answer = day24.partTwo(parse(getInput("day24.txt")))
         println(answer)
-        //assert(answer == 1008)
+        assert(answer == 2002)
     }
 
     private fun parse(input : List<String>) : List<List<Any>> {
