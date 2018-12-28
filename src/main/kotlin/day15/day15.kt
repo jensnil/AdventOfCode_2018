@@ -78,6 +78,26 @@ fun getSurroundingEmpty(cell : Pair<Int,Int>) : List<Pair<Int,Int>> {
     return toReturn
 }
 
+fun getSurroundingEmpty2(cell : Pair<Int,Int>) : List<Pair<Int,Int>> {
+    var toReturn = mutableListOf<Pair<Int,Int>>()
+    var newCell = Pair(cell.first, cell.second - 1)
+    if (getType(newCell) == '.') {
+        toReturn.add(newCell)
+    }
+    newCell = Pair(cell.first - 1, cell.second)
+    if (getType(newCell) == '.') {
+        toReturn.add(newCell)
+    }
+    newCell = Pair(cell.first + 1, cell.second)
+    if (getType(newCell) == '.') {
+        toReturn.add(newCell)
+    }
+    newCell = Pair(cell.first, cell.second + 1)
+    if (getType(newCell) == '.') {
+        toReturn.add(newCell)
+    }
+    return toReturn
+}
 
 fun inRange(isEnemyElf : Boolean) : List<Pair<Int,Int>> {
     val enemies = all.filter { it.value.isElf == isEnemyElf }.map { enemy -> getSurroundingEmpty(enemy.key).distinct()}.flatten()
@@ -86,13 +106,14 @@ fun inRange(isEnemyElf : Boolean) : List<Pair<Int,Int>> {
 
 fun getShortestPath(player : Pair<Int,Int>, inRangeOfEnemies : List<Pair<Int,Int>>) : MutableList<Pair<Int,Int>>? {
     val paths = mutableMapOf<Pair<Int,Int>, MutableList<Pair<Int,Int>>>()
-    val toBeVisited = mutableSetOf<Pair<Int,Int>>()
+    val toBeVisited = mutableListOf<Pair<Int,Int>>()
     toBeVisited.add(player)
+    var first = true
     while (!toBeVisited.isEmpty()) {
         val key = toBeVisited.first()
         val value = paths[key] ?: mutableListOf()
         toBeVisited.remove(key)
-        val surroundingEmpty = getSurroundingEmpty(key)
+        val surroundingEmpty = if (first) getSurroundingEmpty(key) else getSurroundingEmpty2(key)
         surroundingEmpty.forEach {
             val newList = value.toMutableList()
             newList.add(it)
@@ -106,6 +127,7 @@ fun getShortestPath(player : Pair<Int,Int>, inRangeOfEnemies : List<Pair<Int,Int
                 toBeVisited.add(it)
             }
         }
+        first = false
     }
     return paths.filter { inRangeOfEnemies.contains(it.key) }.values.minBy { it.size }
 }
@@ -207,7 +229,7 @@ fun partOne(input: List<String>) : Int {
 
 
 fun partTwo(input: List<String>) : Int {
-    attackPoints = 34
+    attackPoints = 0
     while (true) {
         populate(input)
         var elfCount = all.count { it.value.isElf }
@@ -222,7 +244,7 @@ fun partTwo(input: List<String>) : Int {
 fun runGame() : Int {
     while (true) {
         all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
-        printGame()
+        //printGame()
         all.toMap().forEach {
             if (it.value.hitPoints > 0) {
                 if (all.filter { it.value.isElf }.isEmpty() || all.filter { !it.value.isElf }.isEmpty()) {
