@@ -57,8 +57,8 @@ fun getType(cell : Pair<Int,Int>) : Char {
     return board[cell.second][cell.first]
 }
 
-fun getSurroundingEmpty(cell : Pair<Int,Int>) : List<Pair<Int,Int>> {
-    var toReturn = mutableListOf<Pair<Int,Int>>()
+fun getSurroundingEmpty(cell : Pair<Int,Int>) : Set<Pair<Int,Int>> {
+    var toReturn = mutableSetOf<Pair<Int,Int>>()
     var newCell = Pair(cell.first, cell.second - 1)
     if (getType(newCell) == '.' && !all.contains(newCell)) {
         toReturn.add(newCell)
@@ -78,58 +78,25 @@ fun getSurroundingEmpty(cell : Pair<Int,Int>) : List<Pair<Int,Int>> {
     return toReturn
 }
 
-fun getSurroundingEmpty2(cell : Pair<Int,Int>) : List<Pair<Int,Int>> {
-    var toReturn = mutableListOf<Pair<Int,Int>>()
-    var newCell = Pair(cell.first, cell.second - 1)
-    if (getType(newCell) == '.') {
-        toReturn.add(newCell)
-    }
-    newCell = Pair(cell.first - 1, cell.second)
-    if (getType(newCell) == '.') {
-        toReturn.add(newCell)
-    }
-    newCell = Pair(cell.first + 1, cell.second)
-    if (getType(newCell) == '.') {
-        toReturn.add(newCell)
-    }
-    newCell = Pair(cell.first, cell.second + 1)
-    if (getType(newCell) == '.') {
-        toReturn.add(newCell)
-    }
-    return toReturn
-}
-
-fun inRange(isEnemyElf : Boolean) : List<Pair<Int,Int>> {
-    val enemies = all.filter { it.value.isElf == isEnemyElf }.map { enemy -> getSurroundingEmpty(enemy.key).distinct()}.flatten()
+fun inRange(isEnemyElf : Boolean) : Set<Pair<Int,Int>> {
+    val enemies = all.filter { it.value.isElf == isEnemyElf }.map { enemy -> getSurroundingEmpty(enemy.key).distinct()}.flatten().toSet()
     return enemies
 }
 
-fun getShortestPath(player : Pair<Int,Int>, inRangeOfEnemies : List<Pair<Int,Int>>) : MutableList<Pair<Int,Int>>? {
-    val paths = mutableMapOf<Pair<Int,Int>, MutableList<Pair<Int,Int>>>()
-    val toBeVisited = mutableListOf<Pair<Int,Int>>()
-    toBeVisited.add(player)
-    var first = true
+fun getNearestAndChosen(player : Pair<Int,Int>, reachableEnemies : Set<Pair<Int,Int>>) : Pair<Int,Int>? {
+    val toBeVisited = getSurroundingEmpty(player).toMutableList()
+    val shortestPaths = toBeVisited.map { it to Pair(it, 1) }.toMap().toMutableMap()
     while (!toBeVisited.isEmpty()) {
-        val key = toBeVisited.first()
-        val value = paths[key] ?: mutableListOf()
-        toBeVisited.remove(key)
-        val surroundingEmpty = if (first) getSurroundingEmpty(key) else getSurroundingEmpty2(key)
-        surroundingEmpty.forEach {
-            val newList = value.toMutableList()
-            newList.add(it)
-            if (paths.containsKey(it)) {
-                if (newList.size < paths[it]!!.size) {
-                    paths[it] = newList
-                    toBeVisited.add(it)
-                }
-            } else {
-                paths[it] = newList
-                toBeVisited.add(it)
+        val current = toBeVisited.removeAt(0)
+        val surroundingEmpty = getSurroundingEmpty(current)
+        surroundingEmpty.forEach {newPosition ->
+            if (!shortestPaths.containsKey(newPosition) || shortestPaths[current]!!.second + 1 < shortestPaths[newPosition]!!.second) {
+                shortestPaths[newPosition] = Pair(shortestPaths[current]!!.first, shortestPaths[current]!!.second + 1)
+                toBeVisited.add(newPosition)
             }
         }
-        first = false
     }
-    return paths.filter { inRangeOfEnemies.contains(it.key) }.values.minBy { it.size }
+    return shortestPaths.filterKeys { reachableEnemies.contains(it)}.map { it.value to it.key }.sortedWith( compareBy ({ it.first.second }, { it.second.second }, { it.second.first } )).map { it.first.first }.firstOrNull()
 }
 
 fun canHit(cell : Pair<Int,Int>, player : Player) : Boolean {
@@ -170,9 +137,6 @@ fun hit(cell : Pair<Int,Int>, player : Player) {
     if (all[newCell] != null && all[newCell]!!.isElf != player.isElf) {
         inRange.add(newCell)
     }
-//    if (inRange.groupBy { all[it]!!.hitPoints }.minBy { it.key }?.value?.size ?: 0 > 1) {
-//        println("HEJ")
-//    }
 
     inRange.minBy { all[it]!!.hitPoints }?.let {
         all[it]!!.hitPoints -= if (player.isElf) attackPoints else 3
@@ -180,31 +144,24 @@ fun hit(cell : Pair<Int,Int>, player : Player) {
 }
 
 fun removeCorpses() : Boolean {
-//    if (all.any { it.value.hitPoints <= 0 && it.value.isElf }) {
-//        return false
-//    }
     all = all.filter { it.value.hitPoints > 0 }.toMutableMap()
     return true
 }
 
-fun partOne(input: List<String>) : Int {
-    populate(input)
+fun runGame() : Int {
     while (true) {
         all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
-        printGame()
+        //printGame()
         all.toMap().forEach {
             if (it.value.hitPoints > 0) {
                 if (all.filter { it.value.isElf }.isEmpty() || all.filter { !it.value.isElf }.isEmpty()) {
-                    printGame()
-                    println("$rounds * ${all.map { it.value.hitPoints }.sum()}")
+                    //printGame()
+                    //println("$rounds * ${all.map { it.value.hitPoints }.sum()}")
                     return rounds * all.map { it.value.hitPoints }.sum()
                 }
                 if (!canHit(it.key, it.value)) {
-                    val reachableEnemies = inRange(!it.value.isElf)
-
-                    val shortestPath = getShortestPath(it.key, reachableEnemies)
-
-                    val nextPosition = shortestPath?.first()
+                    val enemiesInRange = inRange(!it.value.isElf)
+                    val nextPosition = getNearestAndChosen(it.key, enemiesInRange)
 
                     nextPosition?.let {next ->
                         all.remove(it.key)
@@ -217,14 +174,17 @@ fun partOne(input: List<String>) : Int {
                 }
                 removeCorpses()
             } else {
-                println()
+                //println()
             }
         }
         rounds++
-
     }
-
     return 0
+}
+
+fun partOne(input: List<String>) : Int {
+    populate(input)
+    return runGame()
 }
 
 
@@ -239,41 +199,4 @@ fun partTwo(input: List<String>) : Int {
         }
         attackPoints++
     }
-}
-
-fun runGame() : Int {
-    while (true) {
-        all = all.toSortedMap( compareBy ({it.second}, {it.first} ))
-        //printGame()
-        all.toMap().forEach {
-            if (it.value.hitPoints > 0) {
-                if (all.filter { it.value.isElf }.isEmpty() || all.filter { !it.value.isElf }.isEmpty()) {
-                    printGame()
-                    println("$rounds * ${all.map { it.value.hitPoints }.sum()}")
-                    return rounds * all.map { it.value.hitPoints }.sum()
-                }
-                if (!canHit(it.key, it.value)) {
-                    val reachableEnemies = inRange(!it.value.isElf)
-
-                    val shortestPath = getShortestPath(it.key, reachableEnemies)
-
-                    val nextPosition = shortestPath?.first()
-
-                    nextPosition?.let {next ->
-                        all.remove(it.key)
-                        all[next] = it.value
-
-                        hit(next, it.value)
-                    }
-                } else {
-                    hit(it.key, it.value)
-                }
-                removeCorpses()
-            } else {
-                println()
-            }
-        }
-        rounds++
-    }
-    return 0
 }
