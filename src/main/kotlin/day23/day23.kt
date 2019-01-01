@@ -46,9 +46,9 @@ fun partTwo(input: List<Pair<Triple<Long,Long,Long>, Long>>) : Long {
         }
         maxBotPoint to maxBotPointCount
     }
-    val sortedPoints = maxBotPoints.sortedWith(compareBy ( {it.second},  { -getDistance(it.first, origo)} ))
-    val maxBotPointTotal = sortedPoints.last().first
-    println(maxBotPointTotal)
-    return Math.abs(maxBotPointTotal.first) + Math.abs(maxBotPointTotal.second) + Math.abs(maxBotPointTotal.third)
+    val maxPointAllBots = maxBotPoints.sortedWith(compareBy ( {it.second},  { -getDistance(it.first, origo)} ))
+    val sortedMaxPointAllBots = maxPointAllBots.last().first
+    println(sortedMaxPointAllBots)
+    return Math.abs(sortedMaxPointAllBots.first) + Math.abs(sortedMaxPointAllBots.second) + Math.abs(sortedMaxPointAllBots.third)
 }
 
