@@ -1,63 +1,54 @@
 package day23
 
-
-fun partOne(input: List<Pair<Triple<Int,Int,Int>, Int>>) : Int {
-    val nanobotWithLargestRadius = input.maxBy { it.second }!!
-    return input.count { Math.abs(it.first.first - nanobotWithLargestRadius.first.first) + Math.abs(it.first.second - nanobotWithLargestRadius.first.second) + Math.abs(it.first.third - nanobotWithLargestRadius.first.third) <= nanobotWithLargestRadius.second }
+fun getDistance(a : Triple<Long,Long,Long>, b : Triple<Long,Long,Long>) : Long {
+    return Math.abs(a.first - b.first) + Math.abs(a.second - b.second) + Math.abs(a.third - b.third)
 }
 
-
-/*fun partTwo(input: List<Pair<Triple<Int,Int,Int>, Int>>) : Int {
-    val minX = input.map { it.first.first }.min()!!
-    val maxX = input.map { it.first.first }.max()!!
-    val minY = input.map { it.first.second }.min()!!
-    val maxY = input.map { it.first.second }.max()!!
-    val minZ = input.map { it.first.third }.min()!!
-    val maxZ = input.map { it.first.third }.max()!!
-//
-//    val allPoints0 = mutableSetOf<Triple<Int,Int,Int>>()
-//    for (r in 0..input[2].second) {
-//        for (x in 0..r) {
-//            for (y in 0..r-x) {
-//                allPoints0.add(Triple(input[2].first.first + x, input[2].first.second + y, input[2].first.third + (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first + x, input[2].first.second + y, input[2].first.third - (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first + x, input[2].first.second - y, input[2].first.third + (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first + x, input[2].first.second - y, input[2].first.third - (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first - x, input[2].first.second + y, input[2].first.third + (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first - x, input[2].first.second + y, input[2].first.third - (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first - x, input[2].first.second - y, input[2].first.third + (r - x - y)))
-//                allPoints0.add(Triple(input[2].first.first - x, input[2].first.second - y, input[2].first.third - (r - x - y)))
-//            }
-//        }
-//    }
-
-    val allPoints = (minX..maxX).map { x ->
-        (minY..maxY).map {y ->
-            (minZ..maxZ).map {z ->
-                input.count { Math.abs(x - it.first.first) + Math.abs(y - it.first.second) + Math.abs(z - it.first.third) <= it.second } to Triple(x,y,z)
-            }
+fun isInBotRangeCount(current : Triple<Long,Long,Long>, input : List<Pair<Triple<Long,Long,Long>, Long>>) : Long {
+    return input.fold(0L) { acc, b ->
+        acc + if (getDistance(current, b.first) <= b.second) {
+            1
+        } else {
+            0
         }
-    }.flatten().flatten()
-    val bestPoint = allPoints.groupBy { it.first }.maxBy { it.key }!!.value[0]
-    return bestPoint.second.first + bestPoint.second.second + bestPoint.second.third
-}*/
+    }
+}
 
-fun partTwo(input: List<Pair<Triple<Int,Int,Int>, Int>>) : Int {
-    val minX = input.map { it.first.first }.min()!!
-    val maxX = input.map { it.first.first }.max()!!
-    val minY = input.map { it.first.second }.min()!!
-    val maxY = input.map { it.first.second }.max()!!
-    val minZ = input.map { it.first.third }.min()!!
-    val maxZ = input.map { it.first.third }.max()!!
+fun partOne(input: List<Pair<Triple<Long,Long,Long>, Long>>) : Long {
+    val nanobotWithLargestRadius = input.maxBy { it.second }!!
+    return input.count { Math.abs(it.first.first - nanobotWithLargestRadius.first.first) + Math.abs(it.first.second - nanobotWithLargestRadius.first.second) + Math.abs(it.first.third - nanobotWithLargestRadius.first.third) <= nanobotWithLargestRadius.second } as Long
+}
 
-    val allPoints = (-10..10).map { x ->
-        (-10..10).map {y ->
-            (-10..10).map {z ->
-                input.count { Math.abs(x - it.first.first) + Math.abs(y - it.first.second) + Math.abs(z - it.first.third) <= it.second } to Triple(x,y,z)
-            }
+fun partTwo(input: List<Pair<Triple<Long,Long,Long>, Long>>) : Long {
+    var origo = Triple(0L, 0L, 0L)
+    val gridSize = 1
+
+    var maxBotPoints = input.map { bot ->
+        var size = bot.second / gridSize
+        var maxBotPoint = bot.first
+        var maxBotPointCount = Long.MIN_VALUE
+        while (size > 0) {
+            val sortedPoints = (-gridSize..gridSize).mapNotNull { x ->
+                (-gridSize..gridSize).mapNotNull {y ->
+                    (-gridSize..gridSize).mapNotNull {z ->
+                        val point = Triple(maxBotPoint.first + x * size, maxBotPoint.second + y * size,maxBotPoint.third + z * size)
+                        if (getDistance(bot.first, point) < bot.second) {
+                            point to isInBotRangeCount(point, input)
+                        } else {
+                            null
+                        }
+                    }
+                }
+            }.flatten().flatten().sortedWith(compareBy ( {it.second},  { -getDistance(it.first, origo)} ))
+            maxBotPoint = sortedPoints!!.last().first
+            maxBotPointCount = sortedPoints!!.last().second
+            size /= 2
         }
-    }.flatten().flatten()
-    val bestPoint = allPoints.groupBy { it.first }.maxBy { it.key }!!.value[0]
-    return bestPoint.second.first + bestPoint.second.second + bestPoint.second.third
+        maxBotPoint to maxBotPointCount
+    }
+    val sortedPoints = maxBotPoints.sortedWith(compareBy ( {it.second},  { -getDistance(it.first, origo)} ))
+    val maxBotPointTotal = sortedPoints.last().first
+    println(maxBotPointTotal)
+    return Math.abs(maxBotPointTotal.first) + Math.abs(maxBotPointTotal.second) + Math.abs(maxBotPointTotal.third)
 }
 
